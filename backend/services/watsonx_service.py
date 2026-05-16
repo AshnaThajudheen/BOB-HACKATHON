@@ -13,7 +13,7 @@ def call_watsonx(prompt: str) -> str:
     # Check if we have real credentials
     if api_key and api_key != "your_watsonx_api_key_here" and project_id and project_id != "your_watsonx_project_id_here":
         try:
-            from ibm_watsonx_ai.foundation_models import Model
+            from ibm_watsonx_ai.foundation_models import ModelInference
             from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 
             credentials = {
@@ -21,7 +21,7 @@ def call_watsonx(prompt: str) -> str:
                 "apikey": api_key
             }
 
-            model_id = "ibm/granite-34b-code-instruct"
+            model_id = "ibm/granite-8b-code-instruct"
 
             parameters = {
                 GenParams.DECODING_METHOD: "greedy",
@@ -29,7 +29,7 @@ def call_watsonx(prompt: str) -> str:
                 GenParams.STOP_SEQUENCES: ["<|endoftext|>"]
             }
 
-            model = Model(
+            model = ModelInference(
                 model_id=model_id,
                 params=parameters,
                 credentials=credentials,

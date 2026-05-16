@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { mockRepositories, mockStats, analyzeRepository, getRepositoryResults } from '../services/mockData';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { fetchHistory, analyzeRepository, getRepositoryResults } from '../services/api';
+import { mockStats } from '../services/mockData'; // Keeping stats mocked for the dashboard visuals
 import toast from 'react-hot-toast';
 
 const AppContext = createContext();
@@ -27,7 +28,15 @@ export const AppProvider = ({ children }) => {
 
   // Load initial data
   useEffect(() => {
-    setRepositories(mockRepositories);
+    const loadHistory = async () => {
+      try {
+        const history = await fetchHistory();
+        setRepositories(history);
+      } catch (error) {
+        console.error("Failed to load history:", error);
+      }
+    };
+    loadHistory();
     
     // Load settings from localStorage
     const savedSettings = localStorage.getItem('app-settings');
@@ -60,17 +69,7 @@ export const AppProvider = ({ children }) => {
       
       toast.success('Repository analysis started!');
       
-      // Simulate processing completion after 3 seconds
-      setTimeout(() => {
-        setRepositories(prev => 
-          prev.map(repo => 
-            repo.id === newRepo.id 
-              ? { ...repo, status: 'completed', testsGenerated: 142, apiEndpoints: 38, coverage: 87 }
-              : repo
-          )
-        );
-        toast.success('Analysis completed!');
-      }, 3000);
+      // We don't simulate completion anymore, the Results page will poll.
       
       return newRepo;
     } catch (error) {
@@ -85,18 +84,22 @@ export const AppProvider = ({ children }) => {
     return repositories.find(repo => repo.id === id);
   };
 
-  const getRepoResults = async (repoId) => {
-    setLoading(true);
+  const getRepoResults = useCallback(async (repoId) => {
+    // Only set loading if it's the first time
     try {
       const results = await getRepositoryResults(repoId);
+      
+      // If we got the results, ensure the repo in context is up to date
+      if (results.status === 'completed' || results.status === 'failed') {
+        setRepositories(prev => prev.map(r => r.id === repoId ? results : r));
+      }
+      
       return results;
     } catch (error) {
-      toast.error('Failed to load results');
+      console.error('Failed to load results:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
   const deleteRepo = (repoId) => {
     setRepositories(prev => prev.filter(repo => repo.id !== repoId));

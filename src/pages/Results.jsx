@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { useApp } from '../context/AppContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -16,43 +17,65 @@ const Results = () => {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('tests');
-  const [selectedTest, setSelectedTest] = useState(null);
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
+    toastShownRef.current = false;
+  }, [id]);
+
+  useEffect(() => {
+    let pollInterval;
+
     const loadData = async () => {
-      setLoading(true);
       try {
         const repoData = getRepoById(id);
-        if (!repoData) {
-          toast.error('Repository not found');
-          navigate('/dashboard');
-          return;
+        if (!repoData && !results) {
+          // If we just landed on the page and context isn't fully hydrated, we might need to fetch directly
+          // but for now, rely on getRepoResults
         }
-        setRepo(repoData);
 
-        if (repoData.status === 'completed') {
-          const resultsData = await getRepoResults(id);
-          setResults(resultsData);
-          if (resultsData.tests?.unitTests?.length > 0) {
-            setSelectedTest(resultsData.tests.unitTests[0]);
+        const resultsData = await getRepoResults(id);
+        setResults(resultsData);
+        setRepo(resultsData); // Results API returns the full repo object
+
+        if (resultsData.status === 'processing') {
+          // Poll every 3 seconds
+          pollInterval = setTimeout(loadData, 3000);
+        } else if (resultsData.status === 'completed') {
+          setLoading(false);
+          if (!toastShownRef.current) {
+            toast.success('Analysis completed successfully!');
+            toastShownRef.current = true;
+          }
+        } else if (resultsData.status === 'failed') {
+          setLoading(false);
+          if (!toastShownRef.current) {
+            toast.error('Analysis failed.');
+            toastShownRef.current = true;
           }
         }
+
       } catch (error) {
         toast.error('Failed to load results');
-      } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [id, getRepoById, getRepoResults, navigate]);
+
+    return () => {
+      if (pollInterval) clearTimeout(pollInterval);
+    };
+  }, [id, getRepoResults]);
 
   const copyToClipboard = (text) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');
   };
 
   const downloadFile = (content, filename) => {
+    if (!content) return;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -63,7 +86,7 @@ const Results = () => {
     toast.success('File downloaded!');
   };
 
-  if (loading) {
+  if (!results && loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <LoadingSpinner size="xl" />
@@ -71,14 +94,21 @@ const Results = () => {
     );
   }
 
-  if (!repo) {
-    return null;
+  if (!repo && !results) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center flex-col">
+        <p className="text-xl text-gray-400 mb-4">Repository not found.</p>
+        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+      </div>
+    );
   }
 
+  const activeRepo = results || repo;
+
   const tabs = [
-    { id: 'tests', label: 'Tests', count: results?.tests?.unitTests?.length || 0 },
-    { id: 'docs', label: 'Documentation', count: results?.documentation?.apiDocs?.length || 0 },
-    { id: 'explanations', label: 'Code Explanations', count: results?.explanations?.length || 0 },
+    { id: 'tests', label: 'Generated Tests' },
+    { id: 'docs', label: 'API Documentation' },
+    { id: 'explanations', label: 'Code Explanations' },
   ];
 
   return (
@@ -100,12 +130,12 @@ const Results = () => {
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">{repo.name}</h1>
-              <p className="text-gray-400">{repo.url}</p>
+              <h1 className="text-4xl font-bold mb-2">{activeRepo.name || activeRepo.url}</h1>
+              <p className="text-gray-400">{activeRepo.url}</p>
             </div>
 
-            <span className={`text-sm px-4 py-2 rounded-full border ${getStatusColor(repo.status)}`}>
-              {repo.status}
+            <span className={`text-sm px-4 py-2 rounded-full border ${getStatusColor(activeRepo.status)}`}>
+              {activeRepo.status}
             </span>
           </div>
         </motion.div>
@@ -118,39 +148,44 @@ const Results = () => {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
         >
           <Card>
-            <p className="text-gray-400 text-sm mb-1">Tests Generated</p>
-            <h3 className="text-2xl font-bold">{repo.testsGenerated}</h3>
+            <p className="text-gray-400 text-sm mb-1">Files Analyzed</p>
+            <h3 className="text-2xl font-bold">
+              {activeRepo.results?.files_analyzed?.length || 0}
+            </h3>
           </Card>
 
           <Card>
             <p className="text-gray-400 text-sm mb-1">API Endpoints</p>
-            <h3 className="text-2xl font-bold">{repo.apiEndpoints}</h3>
+            <h3 className="text-2xl font-bold">{activeRepo.api_endpoints || 0}</h3>
           </Card>
 
           <Card>
             <p className="text-gray-400 text-sm mb-1">Coverage</p>
-            <h3 className="text-2xl font-bold">{repo.coverage}%</h3>
+            <h3 className="text-2xl font-bold">{activeRepo.coverage || 0}%</h3>
           </Card>
 
           <Card>
             <p className="text-gray-400 text-sm mb-1">Analyzed</p>
-            <h3 className="text-lg font-bold">{formatDate(repo.analyzedAt)}</h3>
+            <h3 className="text-lg font-bold">
+              {activeRepo.analyzed_at ? formatDate(activeRepo.analyzed_at) : 'Processing...'}
+            </h3>
           </Card>
         </motion.div>
 
-        {repo.status === 'processing' ? (
+        {activeRepo.status === 'processing' ? (
           <Card className="text-center py-12">
-            <LoadingSpinner size="lg" className="mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Analysis in Progress</h3>
-            <p className="text-gray-400">
-              This usually takes 2-5 minutes. You can leave this page and come back later.
+            <LoadingSpinner size="lg" className="mb-4 mx-auto" />
+            <h3 className="text-xl font-semibold mb-2">AI Analysis in Progress...</h3>
+            <p className="text-gray-400 max-w-lg mx-auto">
+              IBM Watsonx is currently reading your repository files and generating tests and documentation. 
+              This page will automatically update when finished.
             </p>
           </Card>
-        ) : repo.status === 'failed' ? (
+        ) : activeRepo.status === 'failed' ? (
           <Card className="text-center py-12">
             <div className="text-red-400 text-5xl mb-4">⚠️</div>
             <h3 className="text-xl font-semibold mb-2">Analysis Failed</h3>
-            <p className="text-gray-400 mb-4">{repo.error || 'An error occurred during analysis'}</p>
+            <p className="text-gray-400 mb-4">{activeRepo.error || 'An error occurred during analysis.'}</p>
             <Button onClick={() => navigate('/dashboard')}>Try Another Repository</Button>
           </Card>
         ) : (
@@ -175,160 +210,44 @@ const Results = () => {
                       }
                     `}
                   >
-                    {tab.label} ({tab.count})
+                    {tab.label}
                   </button>
                 ))}
               </div>
             </motion.div>
 
-            {/* Content */}
+            {/* Markdown Content Viewer */}
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {activeTab === 'tests' && (
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Test List */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold mb-4">Unit Tests</h3>
-                    {results?.tests?.unitTests?.map((test) => (
-                      <Card
-                        key={test.id}
-                        hover
-                        onClick={() => setSelectedTest(test)}
-                        className={`cursor-pointer ${selectedTest?.id === test.id ? 'border-white' : ''}`}
-                      >
-                        <h4 className="font-semibold mb-2">{test.name}</h4>
-                        <div className="flex items-center gap-4 text-sm text-gray-400">
-                          <span>{test.framework}</span>
-                          <span>{test.testCount} tests</span>
-                        </div>
-                      </Card>
-                    ))}
-
-                    {results?.tests?.integrationTests?.length > 0 && (
-                      <>
-                        <h3 className="font-semibold mb-4 mt-6">Integration Tests</h3>
-                        {results.tests.integrationTests.map((test) => (
-                          <Card
-                            key={test.id}
-                            hover
-                            onClick={() => setSelectedTest(test)}
-                            className={`cursor-pointer ${selectedTest?.id === test.id ? 'border-white' : ''}`}
-                          >
-                            <h4 className="font-semibold mb-2">{test.name}</h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-400">
-                              <span>{test.framework}</span>
-                              <span>{test.testCount} tests</span>
-                            </div>
-                          </Card>
-                        ))}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Test Code */}
-                  <div className="md:col-span-2">
-                    {selectedTest ? (
-                      <Card>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-xl font-semibold">{selectedTest.name}</h3>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => copyToClipboard(selectedTest.code)}
-                            >
-                              Copy
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => downloadFile(selectedTest.code, selectedTest.name)}
-                            >
-                              Download
-                            </Button>
-                          </div>
-                        </div>
-                        <pre className="bg-black rounded-xl p-4 overflow-x-auto text-sm border border-gray-800">
-                          <code className="text-gray-300">{selectedTest.code}</code>
-                        </pre>
-                      </Card>
-                    ) : (
-                      <Card className="text-center py-12">
-                        <p className="text-gray-400">Select a test file to view its content</p>
-                      </Card>
-                    )}
-                  </div>
+              <Card>
+                <div className="flex justify-end gap-2 mb-4 pb-4 border-b border-gray-800">
+                   <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => copyToClipboard(activeRepo.results?.[activeTab])}
+                    >
+                      Copy Markdown
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => downloadFile(activeRepo.results?.[activeTab], `${activeTab}.md`)}
+                    >
+                      Download .md
+                    </Button>
                 </div>
-              )}
-
-              {activeTab === 'docs' && (
-                <div className="space-y-6">
-                  {results?.documentation?.apiDocs?.map((doc) => (
-                    <Card key={doc.id}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold mb-1">{doc.title}</h3>
-                          <span className="text-sm text-gray-400">{doc.type}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => copyToClipboard(doc.content)}
-                          >
-                            Copy
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => downloadFile(doc.content, `${doc.title}.yaml`)}
-                          >
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                      <pre className="bg-black rounded-xl p-4 overflow-x-auto text-sm border border-gray-800">
-                        <code className="text-gray-300">{doc.content}</code>
-                      </pre>
-                    </Card>
-                  ))}
+                <div className="prose prose-invert prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800 max-w-none">
+                  {activeRepo.results?.[activeTab] ? (
+                     <ReactMarkdown>{activeRepo.results[activeTab]}</ReactMarkdown>
+                  ) : (
+                    <p className="text-gray-400 italic">No content generated for this section.</p>
+                  )}
                 </div>
-              )}
-
-              {activeTab === 'explanations' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {results?.explanations?.map((exp) => (
-                    <Card key={exp.id}>
-                      <div className="mb-4">
-                        <h3 className="text-xl font-semibold mb-2">{exp.name}</h3>
-                        <div className="flex items-center gap-3 text-sm text-gray-400">
-                          <span>{exp.file}</span>
-                          <span>•</span>
-                          <span>{exp.type}</span>
-                          <span>•</span>
-                          <span className={`
-                            ${exp.complexity === 'Low' ? 'text-green-400' : ''}
-                            ${exp.complexity === 'Medium' ? 'text-yellow-400' : ''}
-                            ${exp.complexity === 'High' ? 'text-red-400' : ''}
-                          `}>
-                            {exp.complexity} complexity
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-gray-300 leading-relaxed whitespace-pre-line">
-                        {exp.explanation}
-                      </p>
-                      <div className="mt-4 pt-4 border-t border-gray-800 text-sm text-gray-400">
-                        {exp.linesOfCode} lines of code
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              </Card>
             </motion.div>
           </>
         )}
@@ -338,5 +257,3 @@ const Results = () => {
 };
 
 export default Results;
-
-// Made with Bob

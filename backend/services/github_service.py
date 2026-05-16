@@ -16,7 +16,10 @@ def parse_github_url(url: str) -> tuple:
     # Assuming url format: https://github.com/owner/repo
     parts = url.rstrip('/').split('/')
     if len(parts) >= 2:
-        return parts[-2], parts[-1]
+        repo = parts[-1]
+        if repo.endswith('.git'):
+            repo = repo[:-4]
+        return parts[-2], repo
     raise ValueError("Invalid GitHub URL format")
 
 def fetch_repository_files(url: str) -> List[Dict[str, str]]:
