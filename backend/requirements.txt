@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+ibm-watsonx-ai
+requests
+pydantic
+python-dotenv
+langchain
+tiktoken
