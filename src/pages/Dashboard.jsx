@@ -51,6 +51,9 @@ const Dashboard = () => {
           className="mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Dashboard</h1>
+          <h2 className="text-xl md:text-2xl text-gray-300 mb-2">
+            BOBCAT - AI-Powered Repository Intelligence for Automated Documentation & Testing
+          </h2>
           <p className="text-gray-400 text-lg">
             Analyze repositories and view your generated tests and documentation
           </p>

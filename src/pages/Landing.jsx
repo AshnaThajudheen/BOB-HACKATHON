@@ -66,12 +66,11 @@ const Landing = () => {
             </div>
 
             <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
-              AutoDocTest AI
+              BobCat
             </h1>
 
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Automatically generate tests, API documentation, and intelligent
-              code explanations for any GitHub repository.
+              AI-Powered Repository Intelligence for Automated Documentation & Testing
             </p>
 
             <div className="flex flex-wrap gap-4">

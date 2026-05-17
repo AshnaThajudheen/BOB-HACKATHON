@@ -28,4 +28,10 @@ dist-ssr
 backend/.env
 __pycache__/
 *.pyc
-backend/history.db
+*.db
+backend/db/*.db
+backend/.venv/
+.venv/
+venv/
+*.sqlite
+*.sqlite3

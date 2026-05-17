@@ -7,7 +7,7 @@ from routes import analyze, history, results
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="AutoDocTest AI Backend")
+app = FastAPI(title="BobCat Backend")
 
 # Configure CORS for the frontend (Vite defaults to 5173)
 app.add_middleware(
@@ -25,4 +25,4 @@ app.include_router(results.router, tags=["Results"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to AutoDocTest AI API"}
+    return {"message": "Welcome to BobCat API"}

@@ -25,7 +25,7 @@ def parse_github_url(url: str) -> tuple:
 def fetch_repository_files(url: str) -> List[Dict[str, str]]:
     """
     Fetches the repository structure and downloads file contents.
-    For simplicity, fetches the default branch tree and downloads top level files.
+    Intelligently filters to only source code files.
     """
     owner, repo = parse_github_url(url)
     headers = get_github_headers()
@@ -42,22 +42,57 @@ def fetch_repository_files(url: str) -> List[Dict[str, str]]:
     tree_resp.raise_for_status()
     tree = tree_resp.json().get('tree', [])
     
+    # Source code extensions to prioritize
+    source_extensions = {'.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.go', '.rs', '.rb', '.php'}
+    
+    # Patterns to ignore
+    ignore_patterns = [
+        'node_modules/', '.git/', '__pycache__/', 'venv/', 'dist/', 'build/',
+        '.github/', 'coverage/', '.next/', '.nuxt/', 'vendor/', 'target/',
+        'package-lock.json', 'yarn.lock', '.env', 'LICENSE', 'README.md'
+    ]
+    
     files = []
-    # Fetching up to 10 blobs to avoid huge wait times
     blobs = [item for item in tree if item['type'] == 'blob']
     
-    for item in blobs[:10]:
+    # Filter and prioritize source code files
+    source_files = []
+    for item in blobs:
         file_path = item['path']
-        # Skip binaries based on basic extension check
-        if any(file_path.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.pdf', '.zip']):
+        
+        # Skip ignored patterns
+        if any(pattern in file_path for pattern in ignore_patterns):
             continue
-            
-        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{file_path}"
-        raw_resp = requests.get(raw_url, headers=headers)
-        if raw_resp.status_code == 200:
-            files.append({
-                "path": file_path,
-                "content": raw_resp.text
-            })
+        
+        # Skip binary files
+        if any(file_path.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.pdf', '.zip', '.exe', '.dll']):
+            continue
+        
+        # Check if it's a source code file
+        ext = '.' + file_path.split('.')[-1] if '.' in file_path else ''
+        if ext in source_extensions:
+            source_files.append(item)
+    
+    # Fetch up to 25 source files (increased from 10)
+    for item in source_files[:25]:
+        file_path = item['path']
+        try:
+            raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{file_path}"
+            raw_resp = requests.get(raw_url, headers=headers, timeout=5)
+            if raw_resp.status_code == 200:
+                # Only include text files (skip if content looks binary)
+                try:
+                    content = raw_resp.text
+                    # Basic check for binary content
+                    if '\x00' not in content[:1000]:
+                        files.append({
+                            "path": file_path,
+                            "content": content
+                        })
+                except UnicodeDecodeError:
+                    continue
+        except Exception as e:
+            print(f"Error fetching {file_path}: {e}")
+            continue
             
     return files

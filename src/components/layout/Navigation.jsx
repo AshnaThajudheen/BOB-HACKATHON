@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import bobcatLogo from '../../assets/image.png';
 
 const Navigation = () => {
   const location = useLocation();
@@ -26,10 +27,12 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <span className="text-black font-bold text-lg">A</span>
-            </div>
-            <span className="font-bold text-xl hidden sm:block">AutoDocTest AI</span>
+            <img
+              src={bobcatLogo}
+              alt="BobCat Logo"
+              className="w-10 h-10 rounded-lg"
+            />
+            <span className="font-bold text-xl hidden sm:block">BobCat</span>
           </Link>
 
           {/* Desktop Navigation */}

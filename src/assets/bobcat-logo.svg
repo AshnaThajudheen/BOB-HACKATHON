@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Background with rounded corners -->
+  <rect width="400" height="400" rx="80" fill="url(#bgGradient)"/>
+  
+  <!-- Bob (robot) on top of cat's head -->
+  <g transform="translate(200, 120)">
+    <!-- Bob's helmet/head -->
+    <rect x="-35" y="-45" width="70" height="50" rx="10" fill="#4169E1" stroke="#2C3E50" stroke-width="4"/>
+    <rect x="-30" y="-40" width="60" height="8" fill="#5B8DEE"/>
+    <rect x="-25" y="-50" width="20" height="10" rx="3" fill="#4169E1" stroke="#2C3E50" stroke-width="3"/>
+    <rect x="5" y="-50" width="20" height="10" rx="3" fill="#4169E1" stroke="#2C3E50" stroke-width="3"/>
+    
+    <!-- Bob's visor/face -->
+    <rect x="-30" y="-25" width="60" height="30" rx="5" fill="#F5F5F5" stroke="#2C3E50" stroke-width="3"/>
+    
+    <!-- Bob's eyes -->
+    <circle cx="-12" cy="-10" r="8" fill="#2C3E50"/>
+    <circle cx="-10" cy="-12" r="3" fill="#FFFFFF"/>
+    <circle cx="12" cy="-10" r="8" fill="#2C3E50"/>
+    <circle cx="14" cy="-12" r="3" fill="#FFFFFF"/>
+    
+    <!-- Bob's smile -->
+    <path d="M -15,-2 Q 0,5 15,-2" stroke="#2C3E50" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Cat body -->
+  <g transform="translate(200, 260)">
+    <!-- Cat's head -->
+    <ellipse cx="0" cy="-30" rx="70" ry="65" fill="#F4A460" stroke="#2C3E50" stroke-width="4"/>
+    <ellipse cx="0" cy="-25" rx="55" ry="50" fill="#FFF8DC"/>
+    
+    <!-- Cat's ears -->
+    <path d="M -50,-70 L -60,-95 L -35,-75 Z" fill="#F4A460" stroke="#2C3E50" stroke-width="4"/>
+    <path d="M -50,-75 L -55,-85 L -42,-72 Z" fill="#FFE4B5"/>
+    <path d="M 50,-70 L 60,-95 L 35,-75 Z" fill="#F4A460" stroke="#2C3E50" stroke-width="4"/>
+    <path d="M 50,-75 L 55,-85 L 42,-72 Z" fill="#FFE4B5"/>
+    
+    <!-- Cat's eyes -->
+    <ellipse cx="-25" cy="-35" rx="18" ry="22" fill="#FFFFFF" stroke="#2C3E50" stroke-width="3"/>
+    <ellipse cx="-25" cy="-32" rx="10" ry="16" fill="#2C3E50"/>
+    <ellipse cx="-22" cy="-38" r="4" fill="#FFFFFF"/>
+    
+    <ellipse cx="25" cy="-35" rx="18" ry="22" fill="#FFFFFF" stroke="#2C3E50" stroke-width="3"/>
+    <ellipse cx="25" cy="-32" rx="10" ry="16" fill="#2C3E50"/>
+    <ellipse cx="28" cy="-38" r="4" fill="#FFFFFF"/>
+    
+    <!-- Cat's nose -->
+    <path d="M 0,-15 L -5,-8 L 5,-8 Z" fill="#2C3E50"/>
+    
+    <!-- Cat's mouth -->
+    <path d="M 0,-8 Q -12,0 -18,-2" stroke="#2C3E50" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M 0,-8 Q 12,0 18,-2" stroke="#2C3E50" stroke-width="3" fill="none" stroke-linecap="round"/>
+    
+    <!-- Cat's whiskers -->
+    <line x1="-70" y1="-25" x2="-45" y2="-28" stroke="#2C3E50" stroke-width="2"/>
+    <line x1="-70" y1="-18" x2="-45" y2="-20" stroke="#2C3E50" stroke-width="2"/>
+    <line x1="-70" y1="-11" x2="-45" y2="-12" stroke="#2C3E50" stroke-width="2"/>
+    <line x1="70" y1="-25" x2="45" y2="-28" stroke="#2C3E50" stroke-width="2"/>
+    <line x1="70" y1="-18" x2="45" y2="-20" stroke="#2C3E50" stroke-width="2"/>
+    <line x1="70" y1="-11" x2="45" y2="-12" stroke="#2C3E50" stroke-width="2"/>
+    
+    <!-- Cat's body with code sign -->
+    <rect x="-60" y="20" width="120" height="80" rx="15" fill="#FFFFFF" stroke="#2C3E50" stroke-width="4"/>
+    
+    <!-- Code symbol </> -->
+    <text x="0" y="70" font-family="monospace" font-size="45" font-weight="bold" fill="#4169E1" text-anchor="middle"></></text>
+    
+    <!-- Cat's tail -->
+    <path d="M 60,40 Q 90,30 95,50 Q 100,70 85,75" stroke="#F4A460" stroke-width="12" fill="none" stroke-linecap="round"/>
+  </g>
+  
+  <!-- BobCat text at bottom -->
+  <text x="200" y="370" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BobCat</text>
+  
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#B8D4F1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A8C8E8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- Made with Bob -->

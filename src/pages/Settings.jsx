@@ -272,12 +272,12 @@ const Settings = () => {
           className="mt-12"
         >
           <Card>
-            <h2 className="text-2xl font-bold mb-4">About AutoDocTest AI</h2>
+            <h2 className="text-2xl font-bold mb-4">About BobCat</h2>
             <div className="space-y-2 text-gray-400">
               <p>Version: 1.0.0</p>
               <p>Powered by IBM watsonx and IBM Bob</p>
               <p className="pt-4 border-t border-gray-800">
-                © 2026 AutoDocTest AI. All rights reserved.
+                © 2026 BobCat. All rights reserved.
               </p>
             </div>
           </Card>
