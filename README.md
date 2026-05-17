@@ -5,7 +5,7 @@
 [![IBM Watsonx](https://img.shields.io/badge/IBM%20Watsonx-052FAD?style=for-the-badge&logo=ibm&logoColor=white)](#)
 [![Python](https://img.shields.io/badge/Python-14354C?style=for-the-badge&logo=python&logoColor=white)](#)
 
-> **AutoDocTest AI** is an intelligent developer tool that automatically analyzes public GitHub repositories and generates comprehensive Unit Tests, structured API Documentation, and deep Code Explanations using the power of IBM Watsonx.
+> **BOB CAT** is an intelligent developer tool that automatically analyzes public GitHub repositories and generates comprehensive Unit Tests, structured API Documentation, and deep Code Explanations using the power of IBM Watsonx.
 
 ---
 
